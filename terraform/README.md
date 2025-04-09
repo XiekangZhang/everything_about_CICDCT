@@ -40,25 +40,35 @@ resource "google_compute_network" "vpc_network" {
 }
 ````
 
-- useful terraform commands
+## Fundamentals
+
+### CLI
 
 ```bash 
 # initialize the directory
-terraform init
+terraform init [-upgrade]
 # format the configuration
 terraform fmt
 # validate the configuration
 terraform validate
 # execution plan 
-terraform plan
+terraform plan [-destroy|-out <file_name>|-replace|-target]
 # create infrastructure
-terraform apply 
+terraform apply [<file_name>|-replace|-target|-var <variable_name>=<value>|-var-file <file_path>]
 # inspect state
-terraform show
+terraform show [-json <file_name> | jq > <file_name>.json]
 # destroy
 terraform destroy
 # output value
-terraform output
+terraform output <file_name>
+# download the new module
+terraform get
+# for jq
+jq '.terraform_version, .format_version' <file_name>.json
+# get state list for replace
+terraform state list
+# open interactive console --> working with troubleshooting in variable definitions
+terraform console
 ```
 
 - when you applied your configuration, Terraform wrote data into a file called _terraform.tfstate_.
@@ -68,3 +78,41 @@ terraform output
 - the prefix ``+/-`` means that terraform will destroy and recreate the resource, rather than updating it in-place.
 - ``terraform destroy`` is the inverse of `terraform apply` in that it terminates all the resources specified in your
   terraform state. It does not destroy resources running elsewhere that are not managed by the current terraform project
+- _.terraform.lock.hcl_ records the versions and hashes of the providers used in this run. This ensures consistent
+  Terraform runs in different environments. Terraform will always use the version recorded in the lock file.
+- `terraform apply -replace` is used to force the recreation of a specific resource. Terraform will first destroy the
+  existing resource and then create a new one in its place.
+- ``terraform apply -target`` is used to focus the apply operation on a specific resource or a set of resource.
+  Terraform will only consider changes related to the targeted resources and their dependencies.
+
+````terraform
+variable "aws_region" {
+  description = "AUS region"
+  type        = string
+  default     = "us-west-2"
+}
+
+variable "resource_tags" {
+  description = "Tags to set for all resources"
+  type = map(string)
+  default = {
+    project     = "my-project",
+    environment = "dev"
+  }
+  validation {
+    condition     = length(var.resource_tags["project"]) <= 16 && length(regexall("[^a-zA-Z0-9-]", var.resource_tags["project"])) == 0
+    error_message = "The project tag must be no more than 16 characters, and only contain letters, numbers, and hyphens."
+  }
+  validation {
+    condition     = length(var.resource_tags["environment"]) <= 8 && length(regexall("[^a-zA-Z0-9-]", var.resource_tags["environment"])) == 0
+    error_message = "The environment tag must be no more than 8 characters, and only contain letters, numbers, and hyphens."
+  }
+}
+````
+
+- ``variable "variable_name"`` contains 3 options - _description_, _type_, _default_
+    - _type = string|number|bool|list|set|map|object|tuple|any_
+    - setting a variable as _ephemeral_ makes it available during runtime, but Terraform omits ephemeral values from
+      state and plan files.
+    - ``slice(one_list, from, to_exclude)`` to sublist the original given list.
+    - interpolate variables in strings: `"web-sg-${var.resource_tags["project"]}-${var.resource_tags["environment"]}"`
