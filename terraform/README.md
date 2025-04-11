@@ -16,30 +16,6 @@
     - **plan**: preview the changes Terraform will make to match your configuration
     - **apply**: make the planned changes
 
-## GCP Quickstart
-
-````terraform
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "6.9.0"
-    }
-  }
-}
-
-provider "google" {
-  project = "<PROJECT_ID>"
-  region  = "us_central1"
-  zone    = "us_ceontral1-c"
-}
-
-// resource <resource_type> <resource_name>
-resource "google_compute_network" "vpc_network" {
-  name = "terraform-network"
-}
-````
-
 ## Fundamentals
 
 ### CLI
@@ -60,7 +36,7 @@ terraform show [-json <file_name> | jq > <file_name>.json]
 # destroy
 terraform destroy
 # output value
-terraform output <file_name>
+terraform output [-json|<file_name>]
 # download the new module
 terraform get
 # for jq
@@ -70,6 +46,31 @@ terraform state list
 # open interactive console --> working with troubleshooting in variable definitions
 terraform console
 ```
+
+#### main.tf
+
+````terraform
+terraform {
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "6.9.0"
+    }
+  }
+  required_version = "~> 1.1.9" # adding min required_version for terraform
+}
+
+provider "google" {
+  project = "<PROJECT_ID>"
+  region  = "us_central1"
+  zone    = "us_ceontral1-c"
+}
+
+// resource <resource_type> <resource_name>
+resource "google_compute_network" "vpc_network" {
+  name = "terraform-network"
+}
+````
 
 - when you applied your configuration, Terraform wrote data into a file called _terraform.tfstate_.
   Terraform stores the IDs and properties of the resources it manages in this file, so that it can
@@ -84,6 +85,18 @@ terraform console
   existing resource and then create a new one in its place.
 - ``terraform apply -target`` is used to focus the apply operation on a specific resource or a set of resource.
   Terraform will only consider changes related to the targeted resources and their dependencies.
+- terraform version constraints
+
+| required version | meaning                                           |
+|------------------|---------------------------------------------------|
+| 1.7.5            | only Terraform v1.7.5                             | 
+| >= 1.7.5         | any terraform v1.7.5 or greater                   | 
+| ~> 1.7.5         | any Terraform v1.7.x, but not v1.8 or later       |
+| >= 1.7.5 < 1.9.5 | Terraform v1.7.5 or greater, but less than v1.9.5 |
+
+- Terraform providers manage resources by communicating between Terraform and target APIs. 
+
+#### variables.tf
 
 ````terraform
 variable "aws_region" {
@@ -116,3 +129,20 @@ variable "resource_tags" {
       state and plan files.
     - ``slice(one_list, from, to_exclude)`` to sublist the original given list.
     - interpolate variables in strings: `"web-sg-${var.resource_tags["project"]}-${var.resource_tags["environment"]}"`
+
+#### outputs.tf
+
+````terraform
+output "db_username" {
+  description = "Database administrator username"
+  value       = aws_db_instance.database.username
+  sensitive   = true
+}
+```` 
+
+- Terraform output values let you export structured data about your resources. You can use this data to configure
+  other parts of your infrastructure with automation tolls, or as a data source for another Terraform workspace. Outputs
+  are also let you expose data from a child module to a root module.
+- you can add sensitive option into your _output_ definition, which redact the sensitive information to print out in
+  console.
+
