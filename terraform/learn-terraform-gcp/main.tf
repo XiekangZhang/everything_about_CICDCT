@@ -21,17 +21,51 @@ resource "google_compute_network" "vpc_network" {
 }
 
 resource "google_compute_instance" "vm_instance" {
-  machine_type = "f1-micro"
+  machine_type = "e2-medium"
   name         = "terraform-instance"
-  tags = ["web", "dev"]
+  tags = ["test", "scheduled"]
   boot_disk {
     initialize_params {
-      // image = "debian-cloud/debian-11"
-      image = "cos-cloud/cos-stable"
+      image = "debian-cloud/debian-11"
+      size  = 50
     }
   }
+
+  /**
+   metadata = {
+    startup-script = <<-EOF
+      #!/bin/bash
+      chmod +x /tmp/my_script.sh
+      (crontab -l 2>/dev/null; echo "0 0 * * * /tmp/my_script.sh") | crontab -
+      EOF
+  }
+  **/
+
   network_interface {
     network = google_compute_network.vpc_network.name
     access_config {}
+  }
+  # you can use provisioners to model specific actions on the local machine or on a remote machine in order to prepare servers or other infrastructure objects for service.
+  provisioner "file" {
+    source      = "my_script.sh"
+    destination = "/tmp/my_script.sh"
+
+    connection {
+      type = "ssh"
+      user = "root"
+      host = self.network_interface.0.network_ip
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/my_script.sh",
+      "(crontab -l 2>/dev/null; echo \"0 0 * * * /tmp/my_script.sh\") | crontab"
+    ]
+    connection {
+      type = "ssh"
+      user = "root"
+      host = self.network_interface.0.network_ip
+    }
   }
 }

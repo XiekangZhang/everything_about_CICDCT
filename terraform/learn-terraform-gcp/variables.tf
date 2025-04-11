@@ -9,3 +9,9 @@ variable "region" {
 variable "zone" {
   default = "europe-west1-c"
 }
+
+variable "username" {
+  default     = "xiekang"
+  description = "your username"
+  type        = string
+}
