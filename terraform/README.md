@@ -45,6 +45,10 @@ jq '.terraform_version, .format_version' <file_name>.json
 terraform state list
 # open interactive console --> working with troubleshooting in variable definitions
 terraform console
+# set terraform log level and store the log into a separate file
+set TF_LOG=INFO # Linux export TF_LOG=INFO
+set TF_LOG_PATH=terraform.log # Linux export TF_LOG_PATH=terraform.log
+unset TF_LOG # Linux unset after execution
 ```
 
 #### main.tf
@@ -94,7 +98,7 @@ resource "google_compute_network" "vpc_network" {
 | ~> 1.7.5         | any Terraform v1.7.x, but not v1.8 or later       |
 | >= 1.7.5 < 1.9.5 | Terraform v1.7.5 or greater, but less than v1.9.5 |
 
-- Terraform providers manage resources by communicating between Terraform and target APIs. 
+- Terraform providers manage resources by communicating between Terraform and target APIs.
 
 #### variables.tf
 
@@ -146,3 +150,15 @@ output "db_username" {
 - you can add sensitive option into your _output_ definition, which redact the sensitive information to print out in
   console.
 
+## Provisioners
+
+- you can use provisioners to model specific actions on the local machine or on a remote machine in order to prepare
+  servers or other infrastructure objects for service.
+- provisioners could make your configuration less predictable and harder to manager. For more complex scenarios,
+  consider
+  using tools like Packer to pre-bake your image or using configuration management tools (Ansible, Chef, Puppet) invoked
+  by a provisioner or cloud-init
+
+## use cases
+
+### create google compute engine resources and upload my own script.sh and trigger it daily

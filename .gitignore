@@ -2,3 +2,4 @@
 terraform/learn-terraform-gcp/.terraform
 terraform/learn-terraform-gcp/*.tfstate*
 terraform/learn-terraform-gcp/tfplan*
+terraform/learn-terraform-gcp/.ssh
