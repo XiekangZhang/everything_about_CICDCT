@@ -162,3 +162,31 @@ output "db_username" {
 ## use cases
 
 ### create google compute engine resources and upload my own script.sh and trigger it daily
+
+## Google Cloud Platform related issues
+
+#### GCP Networking Explained
+
+- Google Cloud Platform networking provides the infrastructure to connect your cloud-based resources and control network
+  traffic. Key components include:
+    - Virtual Private Cloud (VPC): A logically isolated private network within Google Cloud. It allows you to define IP
+      address ranges, create subnets, and configure network policies, providing a secure and isolated environment for
+      your resources. A VPC network is global, meaning it spans across all regions, but subnets are regional.
+    - Subnets: Subdivisions within a VPC network that define a range of IP addresses within a specific region. Resources
+      within the same subnet can communicate directly via internal IP addresses. You can have multiple subnets within a
+      VPC, and they can reside in different regions.
+    - Firewall Rules: These rules control the network traffic that can enter or leave your VM instances and other
+      resources within your VPC network. Firewall rules are defined at the VPC network level but are enforced at the
+      instance level. You can create rules based on IP ranges, protocols, and ports to allow or deny specific types of
+      traffic.
+- If your VM in Google Cloud only has an internal IP address (no external IP), you cannot directly connect to it from
+  the internet. You need to use a secure tunneling method. Here are the common approaches:
+    - IAP (Identity-Aware Proxy) for TCP Forwarding
+      ````bash
+      // one example with ssh connection
+      gcloud compute start-iap-tunnel <vm_name> 22 --local-host-port=localhost:10022 --zone=<zone>
+      ssh your_username@localhost -p 10022
+      ````
+    - Bastion Host (Jump Server): You can set up a VM in a public subnet with an external IP address. This "bastion
+      host" acts as a gateway to your internal-only VMs.
+    - Cloud VPN or Cloud Interconnect: 

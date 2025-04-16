@@ -1,10 +1,10 @@
 #!/bin/bash
 # script to log basic information for daily run validation
 
-TIMESTAMP=$(date +%Y-%m-%d %H:%M:%S %Z%z)
+TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
 LOG_FILE="/home/xiekang.zhang/daily_run.log"
 
-PASSWORD=$(secret_key_value)
+PASSWORD=${secret_key_value}
 
 echo "-----------------------------------------------------------" >> "$LOG_FILE"
 echo "Daily run started at: $TIMESTAMP" >> "$LOG_FILE"
