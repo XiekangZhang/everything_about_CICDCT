@@ -20,6 +20,7 @@ provider "google" {
   zone    = var.zone
 }
 // resource: resource type, resource name
+/**
 resource "google_compute_network" "network" {
   name = var.network_name
   auto_create_subnetworks = false
@@ -32,13 +33,13 @@ resource "google_compute_subnetwork" "subnetwork" {
   private_ip_google_access = true
   ip_cidr_range = "192.168.0.0/16"
 }
-
+**/
 data "google_secret_manager_secret_version" "retrieved_secret" {
   project = var.project_id
-  secret = "my-test"
+  secret  = "my-test"
   version = "latest"
 }
-
+/**
 resource "google_compute_firewall" "allow_ssh_via_iap" {
   project = var.project_id
   name = "${var.instance_name}-allow-ssh-iap"
@@ -52,10 +53,10 @@ resource "google_compute_firewall" "allow_ssh_via_iap" {
   source_ranges = ["35.235.240.0/20"]
   target_tags = ["iap-ssh-target"]
 }
-
+**/
 resource "google_compute_instance" "vm_instance" {
   machine_type = "e2-medium"
-  name         = "terraform-instance-1"
+  name         = "terraform-instance"
   tags = ["test", "scheduled"]
   boot_disk {
     initialize_params {
@@ -65,12 +66,14 @@ resource "google_compute_instance" "vm_instance" {
   }
   # Metadata to pass initial configuration (cloud-init)
   metadata = {
-    enable-oslogin = "TRUE"
-    ssh-keys = "${var.ssh_username}:${file("./.ssh/gcp-key.pub")}"
+    //enable-oslogin = "TRUE"
+    ssh-keys       = "${var.ssh_username}:${file("./.ssh/gcp-key.pub")}"
   }
 
   network_interface {
-    subnetwork = google_compute_subnetwork.subnetwork.id
+    //subnetwork = google_compute_subnetwork.subnetwork.id
+    network = "default"
+    access_config {}
   }
   service_account {
     email = "130065393661-compute@developer.gserviceaccount.com"
@@ -88,13 +91,15 @@ resource "null_resource" "upload_script" {
 
   # you can use provisioners to model specific actions on the local machine or on a remote machine in order to prepare servers or other infrastructure objects for service.
   provisioner "file" {
-    content = templatefile("my_script.sh.tpl", {secret_key_value=data.google_secret_manager_secret_version.retrieved_secret.secret_data})
+    content = templatefile("my_script.sh.tpl", {
+      secret_key_value = data.google_secret_manager_secret_version.retrieved_secret.secret_data
+    })
     destination = "/home/${var.ssh_username}/my_script.sh"
     connection {
       type    = "ssh"
       user    = var.ssh_username
       private_key = file("./.ssh/gcp-key")
-      host    = google_compute_instance.vm_instance.network_interface.0.network_ip
+      host    = google_compute_instance.vm_instance.network_interface.0.access_config.0.nat_ip
       timeout = "1m"
     }
   }
@@ -108,7 +113,7 @@ resource "null_resource" "upload_script" {
       type    = "ssh"
       user    = var.ssh_username
       private_key = file("./.ssh/gcp-key")
-      host    = google_compute_instance.vm_instance.network_interface.0.network_ip
+      host    = google_compute_instance.vm_instance.network_interface.0.access_config.0.nat_ip
       timeout = "1m"
     }
   }
