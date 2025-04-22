@@ -27,7 +27,7 @@ resource "google_storage_bucket" "script_bucket" {
 resource "google_storage_bucket_object" "startup_script_object" {
   depends_on = [google_storage_bucket.script_bucket]
   bucket = "playground-startup-script-bucket"
-  name   = "my-script.sh"
+  name   = "my_script.sh"
   source = "./my_script.sh"
 }
 
@@ -89,9 +89,10 @@ resource "google_compute_instance" "vm_internal_ip" {
   }
 
   metadata = {
-    ssh-keys       = "${var.ssh_username}:${file("./.ssh/gcp-key.pub")}"
+    //ssh-keys       = "${var.ssh_username}:${file("./.ssh/gcp-key.pub")}"
     startup-script-url ="gs://playground-startup-script-bucket/main.sh"
   }
+  # metadata_startup_script = file("./main.sh")
 
   network_interface {
     //network = "default"
@@ -116,7 +117,7 @@ resource "null_resource" "upload_script" {
 
   provisioner "remote-exec" {
     inline = [
-      "gsutil -m cp -r gs://playground-startup-script-bucket/my-script.sh /home/xiekang.zhang/my-script.sh",
+      "gsutil -m cp -r gs://playground-startup-script-bucket/my_script.sh /home/xiekang.zhang/my_script.sh",
       "chmod +x /home/${var.ssh_username}/my_script.sh",
       "/home/${var.ssh_username}/my_script.sh",
       "(crontab -l 2>/dev/null; echo \"0,30 * * * * /home/${var.ssh_username}/my_script.sh\") | crontab -"
