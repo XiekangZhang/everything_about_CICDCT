@@ -1,5 +1,13 @@
 name: build-test-deploy
-on: push
+on: 
+  push:
+  # schedule:
+  #    - cron: '0 0 * * 0' 
+  #  paths:
+  #    - '**.js'
+  #    - 'package.json'
+  #    - 'package-lock.json'
+  workflow_dispatch: # manual trigger
 jobs:
   build:
     runs-on: ubuntu-latest
